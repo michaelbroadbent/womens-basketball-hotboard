@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TeamWithLogo, TeamLogo } from './basketballTeamLogos';
+import { TeamWithLogo, TeamLogo, getTeamLogoUrl } from './basketballTeamLogos';
 
 // Clean position/role info from school names
 const cleanSchoolName = (school) => {
@@ -30,15 +30,140 @@ const cleanConcatenatedName = (name) => {
   return name;
 };
 
+// Comprehensive school name mapping for normalization
+const SCHOOL_NAME_MAP = {
+  // Connecticut schools - IMPORTANT distinctions
+  'connecticut': 'UConn',
+  'conn': 'UConn',
+  'university of connecticut': 'UConn',
+  'uconn': 'UConn',
+  'central connecticut': 'Central Connecticut State',
+  'central connecticut state': 'Central Connecticut State',
+  'central connecticut state university': 'Central Connecticut State',
+  'ccsu': 'Central Connecticut State',
+  'eastern connecticut': 'Eastern Connecticut State',
+  'eastern connecticut state': 'Eastern Connecticut State',
+  'southern connecticut': 'Southern Connecticut State',
+  'southern connecticut state': 'Southern Connecticut State',
+  'western connecticut': 'Western Connecticut State',
+  'western connecticut state': 'Western Connecticut State',
+  // Connecticut College stays separate (NESCAC D3)
+  'connecticut college': 'Connecticut College',
+  
+  // Florida schools
+  'fiu': 'FIU',
+  'florida international': 'FIU',
+  'florida international university': 'FIU',
+  'fau': 'FAU',
+  'florida atlantic': 'FAU',
+  'florida atlantic university': 'FAU',
+  'fgcu': 'FGCU',
+  'florida gulf coast': 'FGCU',
+  'florida gulf coast university': 'FGCU',
+  'ucf': 'UCF',
+  'central florida': 'UCF',
+  'university of central florida': 'UCF',
+  'usf': 'USF',
+  'south florida': 'USF',
+  'university of south florida': 'USF',
+  'florida': 'Florida',
+  'university of florida': 'Florida',
+  'florida state': 'Florida State',
+  'fsu': 'Florida State',
+  
+  // Purdue Fort Wayne (formerly IPFW)
+  'purdue fort wayne': 'Purdue Fort Wayne',
+  'fort wayne': 'Purdue Fort Wayne',
+  'ipfw': 'Purdue Fort Wayne',
+  'ipfw/fort wayne/purdue fort wayne': 'Purdue Fort Wayne',
+  'indiana-purdue fort wayne': 'Purdue Fort Wayne',
+  
+  // California Baptist
+  'california baptist': 'California Baptist',
+  'california baptist university': 'California Baptist',
+  'cal baptist': 'California Baptist',
+  'cbu': 'California Baptist',
+  
+  // Fairleigh Dickinson
+  'fairleigh dickinson': 'Fairleigh Dickinson',
+  'fairleigh dickinson university': 'Fairleigh Dickinson',
+  'fdu': 'Fairleigh Dickinson',
+  
+  // Other common variations
+  'lsu': 'LSU',
+  'louisiana state': 'LSU',
+  'louisiana state university': 'LSU',
+  'usc': 'USC',
+  'southern california': 'USC',
+  'ucla': 'UCLA',
+  'byu': 'BYU',
+  'brigham young': 'BYU',
+  'tcu': 'TCU',
+  'texas christian': 'TCU',
+  'smu': 'SMU',
+  'southern methodist': 'SMU',
+  'vcu': 'VCU',
+  'virginia commonwealth': 'VCU',
+  'ole miss': 'Ole Miss',
+  'mississippi': 'Ole Miss',
+  'nc state': 'NC State',
+  'north carolina state': 'NC State',
+  'pitt': 'Pittsburgh',
+  'pittsburgh': 'Pittsburgh',
+  'umass': 'UMass',
+  'massachusetts': 'UMass',
+  'unlv': 'UNLV',
+  'nevada-las vegas': 'UNLV',
+  'utep': 'UTEP',
+  'texas-el paso': 'UTEP',
+  'utsa': 'UTSA',
+  'texas-san antonio': 'UTSA',
+  
+  // Sam Houston (consolidated - dropped "State" in 2022)
+  'sam houston': 'Sam Houston',
+  'sam houston state': 'Sam Houston',
+  'sam houston state university': 'Sam Houston',
+  'shsu': 'Sam Houston',
+  
+  // Saint Mary's (California - WCC)
+  "saint mary's": "Saint Mary's",
+  "st. mary's": "Saint Mary's",
+  "saint mary's college": "Saint Mary's",
+  "saint mary's college of california": "Saint Mary's",
+  "st. mary's college": "Saint Mary's",
+  "st mary's": "Saint Mary's",
+  
+  // Marist (consolidated)
+  'marist': 'Marist',
+  'marist college': 'Marist',
+  'marist university': 'Marist',
+};
+
 const canonicalizeSchoolName = (name) => {
   if (!name) return name;
   // Clean position info first
   let cleaned = cleanSchoolName(name.trim());
   cleaned = cleanConcatenatedName(cleaned);
-  return cleaned
+  
+  // Check direct mapping
+  const lower = cleaned.toLowerCase();
+  if (SCHOOL_NAME_MAP[lower]) {
+    return SCHOOL_NAME_MAP[lower];
+  }
+  
+  // Standard normalization
+  cleaned = cleaned
     .replace(/^University\s+of\s+/i, '')
     .replace(/\s+University$/i, '')
     .replace(/\s+St\.?$/i, ' State');
+  
+  // Check mapping again after stripping
+  const lowerCleaned = cleaned.toLowerCase();
+  if (SCHOOL_NAME_MAP[lowerCleaned]) {
+    return SCHOOL_NAME_MAP[lowerCleaned];
+  }
+  
+  return cleaned;
 };
 
 const schoolsMatch = (s1, s2) => {
@@ -71,7 +196,15 @@ export default function BasketballStaffHistory({ coachesData, onSelectCoach }) {
         if (job.school) schools.add(canonicalizeSchoolName(job.school));
       });
     });
-    return Array.from(schools).sort();
+    const schoolsArray = Array.from(schools);
+    // Sort: schools with logos first, then alphabetically
+    return schoolsArray.sort((a, b) => {
+      const aHasLogo = !!getTeamLogoUrl(a);
+      const bHasLogo = !!getTeamLogoUrl(b);
+      if (aHasLogo && !bHasLogo) return -1;
+      if (!aHasLogo && bHasLogo) return 1;
+      return a.localeCompare(b);
+    });
   }, [coachesData]);
 
   const filteredSchools = useMemo(() => {

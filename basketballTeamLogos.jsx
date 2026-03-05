@@ -243,7 +243,7 @@ const TEAM_LOGOS = {
   'uw-milwaukee': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/270.png',
   'saint francis (pa)': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2598.png',
   'st. francis (pa)': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2598.png',
-  'umass lowell': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2349.png',
+  // Note: UMass Lowell removed - was using wrong logo ID (Louisiana-Monroe's)
   'vmi': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2678.png',
   'virginia military': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2678.png',
   'albany': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/399.png',
@@ -344,7 +344,7 @@ const TEAM_LOGOS = {
   'west georgia': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2698.png',
   'mercyhurst': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2902.png',
   'new haven': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2497.png',
-  'savannah state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2534.png',
+  // savannah state removed - was using Sam Houston's logo ID
   'nebraska-omaha': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2437.png',
   'south carolina upstate': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2908.png',
   'illinois-chicago': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/82.png',
@@ -353,7 +353,7 @@ const TEAM_LOGOS = {
   'southeast missouri state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2546.png',
   'grambling': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2755.png',
   'st. francis brooklyn': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2597.png',
-  'winston-salem state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2724.png',
+  // winston-salem state removed - was using Wichita State's logo ID
   'centenary': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2123.png',
   'william & mary': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2729.png',
   'wofford': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2747.png',
@@ -379,7 +379,7 @@ const TEAM_LOGOS = {
   'elon': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2210.png',
   'fairfield': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2217.png',
   'fairleigh dickinson': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2218.png',
-  'florida southern': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/278.png',
+  // Note: Florida Southern is D2 - no ESPN logo available
   'hartford': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/42.png',
   'high point': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2272.png',
   'idaho state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/304.png',
@@ -430,7 +430,7 @@ const TEAM_LOGOS = {
   'tarleton state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/178.png',
   'tennessee state': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2634.png',
   'tennessee tech': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2635.png',
-  'texas a&m-commerce': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2628.png',
+  // texas a&m-commerce removed - was using TCU's logo ID
   'texas a&m-corpus christi': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/357.png',
   'utrgv': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/292.png',
   'texas rio grande valley': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/292.png',
@@ -511,6 +511,14 @@ const SCHOOL_ALIASES = {
   // Full name variations
   'connecticut': 'uconn',
   'university of connecticut': 'uconn',
+  // Connecticut College and other CT schools now handled by LOGO_BLOCKLIST
+  // Other Connecticut state schools
+  'eastern connecticut': 'eastern connecticut state',
+  'eastern connecticut state': 'eastern connecticut state',
+  'southern connecticut': 'southern connecticut state',
+  'southern connecticut state': 'southern connecticut state',
+  'western connecticut': 'western connecticut state',
+  'western connecticut state': 'western connecticut state',
   'north carolina state': 'nc state',
   'n.c. state': 'nc state',
   "saint john's": "st. john's",
@@ -532,12 +540,12 @@ const SCHOOL_ALIASES = {
   'arkansas–little rock': 'arkansas-little rock',
   'arkansas–pine bluff': 'arkansas-pine bluff',
   'gardner–webb': 'gardner-webb',
-  'winston–salem state': 'winston-salem state',
+  // winston-salem state removed - was using wrong logo
   'wisconsin–green bay': 'green bay',
   'wisconsin–milwaukee': 'milwaukee',
   'louisiana–monroe': 'louisiana-monroe',
   'louisiana–lafayette': 'louisiana',
-  'texas a&m–commerce': 'texas a&m-commerce',
+  // texas a&m-commerce removed - was using wrong logo
   'texas a&m–corpus christi': 'texas a&m-corpus christi',
   
   // Army/Navy variations
@@ -733,7 +741,7 @@ const SCHOOL_ALIASES = {
   "hawai'i": 'hawaii',
   'hawaii': 'hawaii',
   "mount st. mary's": "mount st. mary's",
-  'east texas a&m': 'texas a&m-commerce',
+  // east texas a&m removed - was aliased to wrong school
   'houston christian university': 'houston christian',
   'houston baptist/houston christian': 'houston christian',
   'houston baptist': 'houston christian',
@@ -831,8 +839,7 @@ const SCHOOL_ALIASES = {
   'the citadel': 'citadel',
   'umkc': 'kansas city',
   'usc upstate': 'south carolina upstate',
-  'winston salem st.': 'winston-salem state',
-  'savannah st.': 'savannah state',
+  // winston salem st. and savannah st. aliases removed - underlying entries had wrong logos
   
   // Additional variations
   'mercyhurst': 'mercyhurst',
@@ -863,11 +870,62 @@ const SCHOOL_ALIASES = {
 
 const _cache = new Map();
 
+// Schools that should NOT get a D1 logo (they're different schools with similar names)
+const LOGO_BLOCKLIST = new Set([
+  // D3/D2/NAIA/JuCo schools that share names with D1 schools
+  'connecticut college',        // D3 NESCAC, NOT UConn
+  'georgetown college',         // D2 in Kentucky, NOT Georgetown (Big East)
+  'rhode island college',       // D3, NOT URI (A-10)
+  'southern illinois college',  // Community college, NOT SIU
+  'notre dame college',         // D2 in Ohio, NOT Notre Dame
+  'washington college',         // D3 in Maryland, NOT UW
+  'colorado college',           // D3, NOT Colorado
+  'howard college',             // JuCo in Texas, NOT Howard University
+  'temple college',             // JuCo in Texas, NOT Temple
+  'jacksonville college',       // JuCo, NOT Jacksonville University
+  'columbia college',           // Various D2/D3 schools, NOT Columbia (Ivy)
+  'texas college',              // NAIA, NOT Texas
+  
+  // Schools with wrong logo assignments in ESPN - block to prevent wrong logos
+  'savannah state',             // Has own logo, not Sam Houston
+  'savannah state university',
+  'winston-salem state',        // Has own logo, not Wichita State
+  'winston-salem state university',
+  'winston salem state',
+  'winston salem state university',
+  'texas a&m-commerce',         // Has own logo, not TCU
+  'texas a&m–commerce',
+  'texas a&m commerce',
+  'east texas a&m',             // Same as Texas A&M-Commerce
+  'umass lowell',               // Has own logo, not Louisiana-Monroe
+  'mass lowell',
+  'queens',                     // Queens University of Charlotte, different from Utah Tech
+  'queens university',
+  
+  // Other Connecticut schools (not UConn)
+  'central connecticut',
+  'central connecticut state', 
+  'central connecticut state university',
+  'ccsu',
+  'eastern connecticut',
+  'eastern connecticut state',
+  'southern connecticut',
+  'southern connecticut state',
+  'western connecticut',
+  'western connecticut state',
+]);
+
 export const getTeamLogoUrl = (teamName) => {
   if (!teamName) return null;
   
   let key = teamName.toLowerCase().trim();
   if (_cache.has(key)) return _cache.get(key);
+  
+  // Check blocklist first - these schools should NOT get a logo
+  if (LOGO_BLOCKLIST.has(key)) {
+    _cache.set(key, null);
+    return null;
+  }
   
   // Try direct lookup
   let url = TEAM_LOGOS[key];
@@ -885,6 +943,13 @@ export const getTeamLogoUrl = (teamName) => {
       .replace(/\s+college$/i, '')
       .replace(/\s+st\.?$/i, ' state')
       .trim();
+    
+    // Check blocklist for stripped version too
+    if (LOGO_BLOCKLIST.has(stripped)) {
+      _cache.set(key, null);
+      return null;
+    }
+    
     url = TEAM_LOGOS[stripped];
     if (!url && SCHOOL_ALIASES[stripped]) {
       url = TEAM_LOGOS[SCHOOL_ALIASES[stripped]];

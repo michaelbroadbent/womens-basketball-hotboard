@@ -25,6 +25,19 @@ const SCHOOL_CANONICAL_MAP = {
   "connecticut huskies": "UConn",
   "connecticut": "UConn",
   "uconn": "UConn",
+  "conn": "UConn",
+  // Connecticut schools - BE CAREFUL: Connecticut College is a DIFFERENT school (NESCAC D3)
+  "connecticut college": "Connecticut College", // Different school! NESCAC D3
+  "central connecticut": "Central Connecticut State",
+  "central connecticut state": "Central Connecticut State",
+  "central connecticut state university": "Central Connecticut State",
+  "ccsu": "Central Connecticut State",
+  "eastern connecticut": "Eastern Connecticut State",
+  "eastern connecticut state": "Eastern Connecticut State",
+  "southern connecticut": "Southern Connecticut State",
+  "southern connecticut state": "Southern Connecticut State",
+  "western connecticut": "Western Connecticut State",
+  "western connecticut state": "Western Connecticut State",
   "gonzaga university": "Gonzaga",
   "gonzaga bulldogs": "Gonzaga",
   "university of michigan": "Michigan",
@@ -146,6 +159,46 @@ const SCHOOL_CANONICAL_MAP = {
   "florida state seminoles": "Florida State",
   "florida st.": "Florida State",
   "florida st": "Florida State",
+  // Florida schools - comprehensive mappings
+  "fiu": "FIU",
+  "florida international": "FIU",
+  "florida international university": "FIU",
+  "fau": "FAU",
+  "florida atlantic": "FAU",
+  "florida atlantic university": "FAU",
+  "fgcu": "FGCU",
+  "florida gulf coast": "FGCU",
+  "florida gulf coast university": "FGCU",
+  "ucf": "UCF",
+  "central florida": "UCF",
+  "university of central florida": "UCF",
+  "usf": "USF",
+  "south florida": "USF",
+  "university of south florida": "USF",
+  "famu": "Florida A&M",
+  "florida a&m": "Florida A&M",
+  "florida a&m university": "Florida A&M",
+  "north florida": "North Florida",
+  "unf": "North Florida",
+  "jacksonville": "Jacksonville",
+  "jacksonville university": "Jacksonville",
+  "stetson": "Stetson",
+  "stetson university": "Stetson",
+  // Purdue Fort Wayne (formerly IPFW)
+  "purdue fort wayne": "Purdue Fort Wayne",
+  "fort wayne": "Purdue Fort Wayne",
+  "ipfw": "Purdue Fort Wayne",
+  "ipfw/fort wayne/purdue fort wayne": "Purdue Fort Wayne",
+  "indiana-purdue fort wayne": "Purdue Fort Wayne",
+  // California Baptist
+  "california baptist": "California Baptist",
+  "california baptist university": "California Baptist",
+  "cal baptist": "California Baptist",
+  "cbu": "California Baptist",
+  // Fairleigh Dickinson
+  "fairleigh dickinson": "Fairleigh Dickinson",
+  "fairleigh dickinson university": "Fairleigh Dickinson",
+  "fdu": "Fairleigh Dickinson",
   "clemson university": "Clemson",
   "clemson tigers": "Clemson",
   "georgia tech": "Georgia Tech",
@@ -215,6 +268,7 @@ const SCHOOL_CANONICAL_MAP = {
   "saint mary's college": "Saint Mary's",
   "saint mary's college of california": "Saint Mary's",
   "st. mary's college": "Saint Mary's",
+  "st mary's": "Saint Mary's",
   "saint louis university": "Saint Louis",
   "saint louis billikens": "Saint Louis",
   "st. louis": "Saint Louis",
@@ -257,6 +311,11 @@ const SCHOOL_CANONICAL_MAP = {
   "ball state university": "Ball State",
   "appalachian state": "Appalachian State",
   "appalachian state university": "Appalachian State",
+  // Sam Houston (consolidated - dropped "State" in 2022)
+  "sam houston": "Sam Houston",
+  "sam houston state": "Sam Houston",
+  "sam houston state university": "Sam Houston",
+  "shsu": "Sam Houston",
   // Other common variations
   "dayton": "Dayton",
   "university of dayton": "Dayton",
@@ -461,8 +520,20 @@ const normalizeSchoolForDisplay = (name) => {
     'university of central florida': 'UCF',
     'southern california': 'USC',
     'university of southern california': 'USC',
+    // Connecticut schools - IMPORTANT: Connecticut College is a DIFFERENT school (NESCAC D3)
     'connecticut': 'UConn',
     'university of connecticut': 'UConn',
+    'conn': 'UConn',
+    'central connecticut': 'Central Connecticut State',
+    'central connecticut state university': 'Central Connecticut State',
+    'ccsu': 'Central Connecticut State',
+    'eastern connecticut': 'Eastern Connecticut State',
+    'eastern connecticut state university': 'Eastern Connecticut State',
+    'southern connecticut': 'Southern Connecticut State', 
+    'southern connecticut state university': 'Southern Connecticut State',
+    'western connecticut': 'Western Connecticut State',
+    'western connecticut state university': 'Western Connecticut State',
+    // Connecticut College stays as-is (different school)
     'virginia commonwealth': 'VCU',
     'virginia commonwealth university': 'VCU',
     'brigham young': 'BYU',
@@ -496,6 +567,13 @@ const normalizeSchoolForDisplay = (name) => {
     'unc greensboro': 'UNCG',
     'unc asheville': 'UNCA',
     'unc charlotte': 'Charlotte',
+    // Purdue Fort Wayne
+    'fort wayne': 'Purdue Fort Wayne',
+    'ipfw': 'Purdue Fort Wayne',
+    'ipfw/fort wayne/purdue fort wayne': 'Purdue Fort Wayne',
+    // California Baptist
+    'cal baptist': 'California Baptist',
+    'cbu': 'California Baptist',
   };
   
   const lower = canonical.toLowerCase();
@@ -944,7 +1022,7 @@ export default function WomensBasketballHotboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Get all unique current teams
+  // Get all unique current teams (sorted: schools with logos first)
   const allCurrentTeams = useMemo(() => {
     const teams = new Set();
     coachesData.forEach(coach => {
@@ -952,10 +1030,18 @@ export default function WomensBasketballHotboard() {
         teams.add(canonicalizeSchoolName(coach.currentTeam));
       }
     });
-    return Array.from(teams).sort();
+    const teamsArray = Array.from(teams);
+    // Sort: schools with logos first, then alphabetically
+    return teamsArray.sort((a, b) => {
+      const aHasLogo = !!getTeamLogoUrl(a);
+      const bHasLogo = !!getTeamLogoUrl(b);
+      if (aHasLogo && !bHasLogo) return -1;
+      if (!aHasLogo && bHasLogo) return 1;
+      return a.localeCompare(b);
+    });
   }, [coachesData]);
 
-  // Get all unique alma maters (with proper splitting of concatenated names)
+  // Get all unique alma maters (sorted: schools with logos first)
   const allAlmaMaters = useMemo(() => {
     const amsMap = new Map(); // Use map for deduplication by canonical name
     coachesData.forEach(coach => {
@@ -975,7 +1061,15 @@ export default function WomensBasketballHotboard() {
         });
       }
     });
-    return Array.from(amsMap.values()).sort();
+    const amsArray = Array.from(amsMap.values());
+    // Sort: schools with logos first, then alphabetically
+    return amsArray.sort((a, b) => {
+      const aHasLogo = !!getTeamLogoUrl(a);
+      const bHasLogo = !!getTeamLogoUrl(b);
+      if (aHasLogo && !bHasLogo) return -1;
+      if (!aHasLogo && bHasLogo) return 1;
+      return a.localeCompare(b);
+    });
   }, [coachesData]);
 
   // US State abbreviations and full names mapping
