@@ -1,59 +1,238 @@
 import React, { useState, useMemo } from 'react';
 import { TeamWithLogo, TeamLogo } from './basketballTeamLogos';
 
-// Clean position/role info from school names
-const cleanSchoolName = (school) => {
-  if (!school) return school;
-  
-  // State abbreviations to KEEP (these distinguish schools like "Miami (OH)" vs "Miami (FL)")
-  const stateAbbrevs = /\((AL|AK|AZ|AR|CA|CO|CT|DE|FL|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|Pa\.|Ohio|Maryland|Minnesota|Illinois|West Virginia|Pennsylvania)\)$/i;
-  
-  if (stateAbbrevs.test(school)) {
-    return school.trim();
-  }
-  
-  // Remove position/role parentheticals
-  let cleaned = school
-    .replace(/\s*\(GA\)\s*$/gi, '')  // Graduate Assistant specifically
-    .replace(/\s*\([^)]*(?:asst|assistant|DBO|AHC|VHC|VC|DPD|RC|GM|AGM|coord|ops|operations|manager|admin|volunteer|student|grad|graduate|special|women|men|youth|shooting|vid|development|EXOS|Korisliga|China|NBA|League)[^)]*\)\s*$/gi, '')
-    .trim();
-  
-  return cleaned || school;
+// ---------------------------------------------------------------------------
+// Torvik uses its own team name conventions that differ from our coaches DB.
+// This map normalises Torvik names → DB canonical names before any matching.
+// ---------------------------------------------------------------------------
+const TORVIK_TO_DB = {
+  // Core aliases Torvik gets wrong vs DB
+  "Connecticut": "UConn",
+  "Mississippi": "Ole Miss",
+  "Massachusetts": "UMass",
+  "Southern Cal": "USC",
+  "Florida Intl": "FIU",
+  "Fla. International": "FIU",
+  "Florida International": "FIU",
+  "Tennessee Martin": "UT Martin",
+  "UT-Martin": "UT Martin",
+  "Texas Rio Grande Valley": "UTRGV",
+  "TX Rio Grande Valley": "UTRGV",
+  "UT-Rio Grande Valley": "UTRGV",
+  "Nebraska Omaha": "Omaha",
+  "LIU Brooklyn": "LIU",
+  "Long Island": "LIU",
+  "UMKC": "Kansas City",
+  "Missouri KC": "Kansas City",
+  // Miami disambiguation
+  "Miami FL": "Miami (FL)",
+  "Miami OH": "Miami (OH)",
+  // Loyola disambiguation
+  "Loyola MD": "Loyola (MD",
+  "Loyola Maryland": "Loyola (MD",
+  // Saint Mary's
+  "Saint Mary's CA": "Saint Mary's",
+  "St. Mary's CA": "Saint Mary's",
+  "St. Mary's": "Saint Mary's",
+  // College of Charleston
+  "Col. of Charleston": "Charleston",
+  "C. of Charleston": "Charleston",
+  "College of Charleston": "Charleston",
+  // SIUE
+  "SIUE": "SIU Edwardsville",
+  "SIU-Edwardsville": "SIU Edwardsville",
+  "Sou. Illinois-Edwardsville": "SIU Edwardsville",
+  // Abbreviation expansions
+  "Abilene Chr.": "Abilene Christian",
+  "Appalachian St.": "Appalachian State",
+  "Arkansas St.": "Arkansas State",
+  "Austin Peay St.": "Austin Peay",
+  "Bethune Cookman": "Bethune-Cookman",
+  "Bowling Green St.": "Bowling Green",
+  "Cal St. Bakersfield": "Cal State Bakersfield",
+  "Cal St. Fullerton": "Cal State Fullerton",
+  "Cal St. Northridge": "Cal State Northridge",
+  "CSUN": "Cal State Northridge",
+  "CSU Bakersfield": "Cal State Bakersfield",
+  "Cal Baptist": "California Baptist",
+  "Central Conn. St.": "Central Connecticut",
+  "Charleston So.": "Charleston Southern",
+  "Coastal Car.": "Coastal Carolina",
+  "Detroit": "Detroit Mercy",
+  "E. Illinois": "Eastern Illinois",
+  "E. Kentucky": "Eastern Kentucky",
+  "E. Michigan": "Eastern Michigan",
+  "E. Washington": "Eastern Washington",
+  "East Tennessee St.": "East Tennessee State",
+  "E. Tenn. St.": "East Tennessee State",
+  "E. Tennessee St.": "East Tennessee State",
+  "ETSU": "East Tennessee State",
+  "Florida Gulf Coast": "Florida Gulf Coast",
+  "FGCU": "Florida Gulf Coast",
+  "Florida A&M": "Florida A&M",
+  "FAMU": "Florida A&M",
+  "Fla. Atlantic": "FAU",
+  "Florida Atlantic": "FAU",
+  "Fresno St.": "Fresno State",
+  "Gardner Webb": "Gardner-Webb",
+  "Georgia St.": "Georgia State",
+  "Grambling": "Grambling State",
+  "Grambling St.": "Grambling State",
+  "UWGB": "Green Bay",
+  "Houston Chr.": "Houston Christian",
+  "Houston Baptist": "Houston Christian",
+  "HBU": "Houston Christian",
+  "Idaho St.": "Idaho State",
+  "Illinois St.": "Illinois State",
+  "IU Indy": "IU Indy",
+  "IUPUI": "IU Indy",
+  "Jackson St.": "Jackson State",
+  "Jacksonville St.": "Jacksonville State",
+  "JMU": "James Madison",
+  "Kennesaw St.": "Kennesaw State",
+  "Kent St.": "Kent State",
+  "LaSalle": "La Salle",
+  "La Salle": "La Salle",
+  "Little Rock": "Little Rock",
+  "Ark.-Little Rock": "Little Rock",
+  "Long Beach St.": "Long Beach State",
+  "Louisiana Monroe": "Louisiana Monroe",
+  "ULM": "Louisiana Monroe",
+  "La.-Monroe": "Louisiana Monroe",
+  "Loyola Chicago": "Loyola Chicago",
+  "Loyola-Chicago": "Loyola Chicago",
+  "McNeese": "McNeese",
+  "McNeese St.": "McNeese",
+  "Middle Tennessee": "Middle Tennessee",
+  "MTSU": "Middle Tennessee",
+  "Morehead St.": "Morehead State",
+  "Morgan St.": "Morgan State",
+  "Mt. St. Mary's": "Mount St. Mary's",
+  "N.C. Central": "NC Central",
+  "North Carolina Central": "NC Central",
+  "N.C. State": "NC State",
+  "North Carolina St.": "NC State",
+  "N. Illinois": "Northern Illinois",
+  "N. Iowa": "Northern Iowa",
+  "N. Kentucky": "Northern Kentucky",
+  "Northern Ky.": "Northern Kentucky",
+  "NKU": "Northern Kentucky",
+  "North Dakota St.": "North Dakota State",
+  "N. Dakota St.": "North Dakota State",
+  "NDSU": "North Dakota State",
+  "N. Alabama": "North Alabama",
+  "N. Florida": "North Florida",
+  "NW State": "Northwestern State",
+  "Northwestern St.": "Northwestern State",
+  "ODU": "Old Dominion",
+  "Oral Roberts": "Oral Roberts",
+  "ORU": "Oral Roberts",
+  "Penn": "Pennsylvania",
+  "Penn St.": "Penn State",
+  "Pitt": "Pittsburgh",
+  "UIW": "Incarnate Word",
+  "Portland St.": "Portland State",
+  "Prairie View": "Prairie View A&M",
+  "PVAMU": "Prairie View A&M",
+  "URI": "Rhode Island",
+  "Sacramento St.": "Sacramento State",
+  "Sac. State": "Sacramento State",
+  "Sam Houston St.": "Sam Houston State",
+  "SHSU": "Sam Houston State",
+  "SE Missouri St.": "Southeast Missouri",
+  "SE Missouri": "Southeast Missouri",
+  "SEMO": "Southeast Missouri",
+  "SE Louisiana": "Southeastern Louisiana",
+  "SLU": "Saint Louis",
+  "Sou. Illinois": "Southern Illinois",
+  "Southern Ill.": "Southern Illinois",
+  "SIU": "Southern Illinois",
+  "Southern Miss.": "Southern Miss",
+  "Southern U.": "Southern",
+  "Southern University": "Southern",
+  "Sou. Utah": "Southern Utah",
+  "SUU": "Southern Utah",
+  "S. Alabama": "South Alabama",
+  "S. Carolina": "South Carolina",
+  "SC State": "South Carolina State",
+  "S. Carolina St.": "South Carolina State",
+  "S. Dakota": "South Dakota",
+  "S. Dakota St.": "South Dakota State",
+  "S. Florida": "South Florida",
+  "USF": "South Florida",
+  "SFA": "Stephen F. Austin",
+  "SF Austin": "Stephen F. Austin",
+  "Tarleton": "Tarleton State",
+  "Tarleton St.": "Tarleton State",
+  "Tennessee St.": "Tennessee State",
+  "Tennessee Tech": "Tennessee Tech",
+  "Texas A&M-CC": "Texas A&M-Corpus Christi",
+  "Texas A&M Corpus Chris": "Texas A&M-Corpus Christi",
+  "Texas St.": "Texas State",
+  "WKU": "Western Kentucky",
+  "W&M": "William & Mary",
+  "WCU": "Western Carolina",
+  "Wright St.": "Wright State",
+  "Youngstown St.": "Youngstown State",
 };
 
 // Clean Torvik team names - remove score info like "(H) 99 Mississippi St."
 const cleanTorvikTeamName = (name) => {
   if (!name) return name;
-  // Remove everything from "(H)" onwards
   const cleaned = name.replace(/\(H\).*$/, '').trim();
-  // Also normalize "St." at end to "State"
   return cleaned.replace(/\s+St\.?$/i, ' State');
+};
+
+// Resolve a Torvik team name to the DB canonical name.
+// First checks the explicit alias map, then falls back to light canonicalization.
+const resolveTorvikName = (torvikName) => {
+  if (!torvikName) return torvikName;
+  const cleaned = cleanTorvikTeamName(torvikName);
+  // Direct alias hit
+  if (TORVIK_TO_DB[cleaned]) return TORVIK_TO_DB[cleaned];
+  // Try case-insensitive alias hit
+  const lower = cleaned.toLowerCase();
+  const aliasKey = Object.keys(TORVIK_TO_DB).find(k => k.toLowerCase() === lower);
+  if (aliasKey) return TORVIK_TO_DB[aliasKey];
+  // Fall back: strip "University of" prefix so "University of Connecticut" → "Connecticut"
+  // then alias-check again (handles edge cases)
+  const stripped = cleaned
+    .replace(/^University\s+of\s+/i, '')
+    .replace(/\s+University$/i, '')
+    .trim();
+  if (TORVIK_TO_DB[stripped]) return TORVIK_TO_DB[stripped];
+  return cleaned;
+};
+
+// Clean role/parenthetical info from school names stored in coaching_career
+const cleanSchoolName = (school) => {
+  if (!school) return school;
+  const stateAbbrevs = /\((AL|AK|AZ|AR|CA|CO|CT|DE|FL|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|Pa\.|Ohio|Maryland|Minnesota|Illinois|West Virginia|Pennsylvania)\)$/i;
+  if (stateAbbrevs.test(school)) return school.trim();
+  return school
+    .replace(/\s*\(GA\)\s*$/gi, '')
+    .replace(/\s*\([^)]*(?:asst|assistant|DBO|AHC|VHC|VC|DPD|RC|GM|AGM|coord|ops|operations|manager|admin|volunteer|student|grad|graduate|special|women|men|youth|shooting|vid|development|EXOS|Korisliga|China|NBA|League)[^)]*\)\s*$/gi, '')
+    .trim() || school;
 };
 
 const canonicalizeSchoolName = (name) => {
   if (!name) return name;
-  // Clean position info first
-  let cleaned = cleanSchoolName(name.trim());
-  return cleaned
+  return cleanSchoolName(name.trim())
     .replace(/^University\s+of\s+/i, '')
     .replace(/\s+University$/i, '')
     .replace(/\s+St\.?$/i, ' State');
 };
 
-const schoolsMatch = (s1, s2) => {
-  if (!s1 || !s2) return false;
-  const n1 = canonicalizeSchoolName(s1).toLowerCase().trim();
-  const n2 = canonicalizeSchoolName(s2).toLowerCase().trim();
-  
-  // Exact match after canonicalization
+// Match a DB school name against a resolved (DB-canonical) team name.
+const schoolsMatch = (dbSchool, resolvedTeam) => {
+  if (!dbSchool || !resolvedTeam) return false;
+  const n1 = canonicalizeSchoolName(dbSchool).toLowerCase().trim();
+  const n2 = canonicalizeSchoolName(resolvedTeam).toLowerCase().trim();
   if (n1 === n2) return true;
-  
-  // Handle "St." at end meaning State
   const norm1 = n1.replace(/\s+st\.?$/i, ' state');
   const norm2 = n2.replace(/\s+st\.?$/i, ' state');
   if (norm1 === norm2) return true;
-  
-  // NO partial/substring matching - "Michigan" should NOT match "Michigan State"
+  // NO partial/substring matching — "Michigan" must NOT match "Michigan State"
   return false;
 };
 
@@ -74,11 +253,10 @@ export default function BasketballByStats({ coachesData, torvikData, onCoachClic
   const yearData = useMemo(() => {
     if (!torvikData?.data?.[selectedYear]) return [];
     const teams = torvikData.data[selectedYear].teams || [];
-    // Clean team names
     return teams.map(t => ({
       ...t,
-      team: cleanTorvikTeamName(t.team),
-      originalTeam: t.team // Keep original for debugging
+      team: resolveTorvikName(t.team),  // resolve to DB canonical name
+      originalTeam: t.team              // keep raw Torvik name for debugging
     }));
   }, [torvikData, selectedYear]);
 
@@ -123,14 +301,31 @@ export default function BasketballByStats({ coachesData, torvikData, onCoachClic
     }
   };
 
+  // Returns [{ coach, jobPosition }] for all coaches at teamName during year.
+  // teamName is already DB-canonical (resolved by resolveTorvikName in yearData).
   const getTeamCoaches = (teamName, year) => {
-    return coachesData.filter(coach => {
-      if (!coach.coaching_career) return false;
-      return coach.coaching_career.some(job => {
-        if (!schoolsMatch(job.school, teamName)) return false;
-        const s = job.years?.start, e = job.years?.end || 2026;
-        return s && year >= s && year <= e;
-      });
+    const results = [];
+    for (const coach of coachesData) {
+      if (!coach.coaching_career) continue;
+      for (const job of coach.coaching_career) {
+        if (!schoolsMatch(job.school, teamName)) continue;
+        const s = job.years?.start;
+        const e = job.years?.end ?? 2026;
+        if (s && year > s && year <= e) {
+          results.push({ coach, jobPosition: job.position });
+          break; // count each coach once per team
+        }
+      }
+    }
+    return results;
+  };
+
+  // Find head coach from getTeamCoaches results — uses the career job position,
+  // not currentPosition, so it works correctly for historical years too.
+  const findHeadCoach = (teamCoaches) => {
+    return teamCoaches.find(({ jobPosition, coach }) => {
+      const pos = (jobPosition || coach.currentPosition || '').toLowerCase();
+      return pos.includes('head coach') && !pos.includes('associate') && !pos.includes('asst');
     });
   };
 
@@ -275,9 +470,12 @@ export default function BasketballByStats({ coachesData, torvikData, onCoachClic
           <tbody>
             {sortedData.map((team, idx) => {
               const isExpanded = expandedTeam === team.team;
-              const coaches = isExpanded ? getTeamCoaches(team.team, parseInt(selectedYear)) : [];
-              const hc = coaches.find(c => c.currentPosition?.toLowerCase().includes('head coach'));
-              
+              // getTeamCoaches now returns [{ coach, jobPosition }]
+              const teamCoaches = isExpanded ? getTeamCoaches(team.team, parseInt(selectedYear)) : [];
+              const hcEntry    = isExpanded ? findHeadCoach(teamCoaches) : null;
+              const hc         = hcEntry?.coach ?? null;
+              const others     = teamCoaches.filter(e => e.coach !== hc).slice(0, 4);
+
               return (
                 <React.Fragment key={idx}>
                   <tr
@@ -330,7 +528,7 @@ export default function BasketballByStats({ coachesData, torvikData, onCoachClic
                               <div style={{ fontWeight: 600, color: '#fff' }}>{hc.name}</div>
                             </div>
                           )}
-                          {coaches.filter(c => c !== hc).slice(0, 4).map((c, i) => (
+                          {others.map(({ coach: c, jobPosition }, i) => (
                             <div
                               key={i}
                               onClick={(e) => { e.stopPropagation(); onCoachClick(c); }}
@@ -342,11 +540,16 @@ export default function BasketballByStats({ coachesData, torvikData, onCoachClic
                                 cursor: 'pointer'
                               }}
                             >
-                              <div style={{ fontSize: '0.7rem', color: '#8892b0', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{c.currentPosition}</div>
+                              {/* Use the job's position for the year shown, fall back to currentPosition */}
+                              <div style={{ fontSize: '0.7rem', color: '#8892b0', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                                {jobPosition || c.currentPosition}
+                              </div>
                               <div style={{ fontWeight: 600, color: '#ccd6f6' }}>{c.name}</div>
                             </div>
                           ))}
-                          {coaches.length === 0 && <div style={{ color: '#8892b0' }}>No coaches found in database</div>}
+                          {teamCoaches.length === 0 && (
+                            <div style={{ color: '#8892b0' }}>No coaches found in database</div>
+                          )}
                         </div>
                       </td>
                     </tr>
